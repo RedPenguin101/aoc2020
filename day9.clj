@@ -2,14 +2,10 @@
   (:require [clojure.math.combinatorics :as combo]
             [clojure.string :as str]))
 
-(defn int-parse [s]
-  (try (Integer/parseInt s)
-       (catch NumberFormatException e (BigInteger. s))))
-
 (def input (->> "resources/day9input"
                 slurp
                 str/split-lines
-                (map int-parse)))
+                (map #(Long/parseLong %))))
 
 (def example [35 20 15 25 47 40 62 55 65 95 102 117 150 182 127 219 299 277 309 576])
 
