@@ -1,1 +1,2 @@
-{:deps {ubergraph/ubergraph {:mvn/version "0.8.2"}}}
+{:deps {ubergraph/ubergraph {:mvn/version "0.8.2"}
+        org.clojure/math.combinatorics {:mvn/version "0.1.6"}}}
