@@ -17,7 +17,7 @@
   (some not-sum-of-predecessors (partition (inc 5) 1 example))
   ;; => 127
 
-  (some not-sum-of-predecessors (partition (inc 25) 1 input))
+  (time (some not-sum-of-predecessors (partition (inc 25) 1 input)))
   ;; => 70639851
   )
 
@@ -30,10 +30,10 @@
            (< x target) (recur target xs start (inc end))))))
 
 (comment
-  (contiguous-block-summing-to 127 example )
+  (contiguous-block-summing-to 127 example)
   ;; => [15 25 47 40]
 
-  (let [r (sort (contiguous-block-summing-to 70639851 (vec input)))]
-    (+ (first r) (last r)))
+  (time (let [r (sort (contiguous-block-summing-to 70639851 (vec input)))]
+          (+ (first r) (last r))))
   ;; => 8249240
   )
