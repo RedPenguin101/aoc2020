@@ -29,11 +29,15 @@
           (= :F op) (update state :track conj (move pos facing v))
           :else (update state :track conj (move pos op v)))))
 
-(let [[x y] (last (:track (reduce run-instruction {:facing :E :track [[0 0]]} ex)))]
-  (+ (Math/abs x) (Math/abs y)))
+(comment
+  (let [[x y] (last (:track (reduce run-instruction {:facing :E :track [[0 0]]} ex)))]
+    (+ (Math/abs x) (Math/abs y)))
+  ;; => 25
 
-(let [[x y] (last (:track (reduce run-instruction {:facing :E :track [[0 0]]} input)))]
-  (+ (Math/abs x) (Math/abs y)))
+  (let [[x y] (last (:track (reduce run-instruction {:facing :E :track [[0 0]]} input)))]
+    (+ (Math/abs x) (Math/abs y)))
+  ;; => 415
+)
 
 (defn turn-waypoint [[x y] dir deg]
   (let [deg (if (= :R dir) deg (- 360 deg))]
@@ -51,6 +55,7 @@
           (= :F op) (update state :track conj (move-to-waypoint pos waypoint v))
           :else (assoc state :waypoint (move waypoint op v)))))
 
-(let [[x y] (last (:track (reduce run-instruction2 {:track [[0 0]] :waypoint [10 1]} input)))]
-  (+ (Math/abs x) (Math/abs y)))
+(comment
+  (let [[x y] (last (:track (reduce run-instruction2 {:track [[0 0]] :waypoint [10 1]} input)))]
+    (+ (Math/abs x) (Math/abs y))))
 ;; => 29401

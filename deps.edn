@@ -1,5 +1,6 @@
 {:deps {ubergraph/ubergraph {:mvn/version "0.8.2"}
-        org.clojure/math.combinatorics {:mvn/version "0.1.6"}}
+        org.clojure/math.combinatorics {:mvn/version "0.1.6"}
+        org.clojure/math.numeric-tower {:mvn/version "0.0.4"}}
  :aliases
  {:dev {:extra-deps {criterium/criterium {:mvn/version "0.4.6"}
                      com.clojure-goes-fast/clj-async-profiler {:mvn/version "0.4.1"}}
