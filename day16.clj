@@ -38,9 +38,8 @@
                        label)))))
 
 (defn- narrow-down
-  "Given a sequence of sets of possible label names, will find any positions that are 'settled'
-   (i.e. have only one possible label) and remove those settles labels from every unsettled 
-   position. This will recur until every position has been settled."
+  "Given a sequence of sets of possible label names, will successively narrow down the 
+   possibilties until only a single possible solution remains, and return that solution."
   ([xs] (narrow-down xs 0))
   ([xs it]
    (let [settled (apply union (filter #(= 1 (count %)) xs))]
