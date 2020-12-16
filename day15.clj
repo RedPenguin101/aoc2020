@@ -70,4 +70,7 @@
                    (cond->> last-spoken
                      (not= last-spoken 0) (unchecked-subtract-int turn))))))))
 
-  (time (solve-fast input 30000000)))
+  (time (solve-fast input 30000000))
+  "Elapsed time: 1002.986334 msecs with type hints" 
+  ;; => 651639
+)
