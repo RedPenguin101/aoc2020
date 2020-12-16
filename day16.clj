@@ -2,34 +2,45 @@
   (:require [clojure.string :as str]
             [clojure.set :refer [intersection difference union]]))
 
-(defn parse-rule [string]
+(defn- parse-rule [string]
   (let [matches (rest (re-matches #"(.+): (\d+)-(\d+) or (\d+)-(\d+)" string))]
     [(first matches) (partition 2 (map #(Integer/parseInt %) (rest matches)))]))
 
-(defn invalid-number? [rules number]
+(defn- invalid-number?
+  "Given rules and a number, will return the number if it's invalid, or nil if it is"
+  [rules number]
   (when (not (some #(<= (first %) number (second %)) (apply concat (vals rules))))
     number))
 
-(defn valid-ticket? [rules ticket]
+(defn- valid-ticket? 
+  "Given a ticket and rules, will return the ticket if it is valid, or nil if it's invalid"
+  [rules ticket]
   (when (not-any? (partial invalid-number? rules) ticket)
     ticket))
 
-(defn parse-ticket [ticket-string]
+(defn- parse-ticket [ticket-string]
   (mapv #(Integer/parseInt %) (str/split ticket-string #",")))
 
-(defn parse-input [input]
+(defn- parse-input 
+  "Returns a map of rules, valid-tickets and your-ticket"
+  [input]
   (let [[rules your-ticket other-tickets] (str/split input #"\n\n")
         rules (into {} (map parse-rule (str/split-lines rules)))]
     {:rules rules
      :valid-tickets (filter (partial valid-ticket? rules) (map parse-ticket (rest (str/split-lines other-tickets))))
      :your-ticket (parse-ticket (second (str/split-lines your-ticket)))}))
 
-(defn options [rules number]
-  (set (filter seq (for [[rule-name [[a b] [c d]]] rules]
+(defn- options 
+  "Given a map of rules and a number, will return a set of potentially valid labels names"
+  [rules number]
+  (set (filter seq (for [[label [[a b] [c d]]] rules]
                      (when (or (<= a number b) (<= c number d))
-                       rule-name)))))
+                       label)))))
 
-(defn narrow-down 
+(defn- narrow-down
+  "Given a sequence of sets of possible label names, will find any positions that are 'settled'
+   (i.e. have only one possible label) and remove those settles labels from every unsettled 
+   position. This will recur until every position has been settled."
   ([xs] (narrow-down xs 0))
   ([xs it]
    (let [settled (apply union (filter #(= 1 (count %)) xs))]
@@ -38,7 +49,10 @@
            :else (recur (map #(if (= 1 (count %)) % (difference % settled)) xs)
                         (inc it))))))
 
-(defn find-labels [{:keys [rules valid-tickets your-ticket]}]
+(defn- find-labels
+  "Given a map of rules, your ticket and other tickets, will find the labels for each position and
+   return you ticket complete with labels"
+  [{:keys [rules valid-tickets your-ticket]}]
   (zipmap (narrow-down (apply map intersection (map #(mapv (partial options rules) %) valid-tickets)))
           your-ticket))
 
