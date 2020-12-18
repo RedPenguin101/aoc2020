@@ -1,6 +1,7 @@
 (ns day14
   (:require [clojure.string :as str]
-            [clojure.math.combinatorics :as combo]))
+            [clojure.math.combinatorics :as combo]
+            [criterium.core :refer [quick-bench with-progress-reporting]]))
 
 (defn- binary-array
   ([n] (map #(Character/digit % 10) (Integer/toBinaryString n)))
@@ -51,24 +52,29 @@
          (map #(replace % result)
               (map #(zipmap replacements %) (combo/permuted-combinations (apply concat [(repeat n 0) (repeat n 1)]) n))))))
 
-(defn- mem-push [mem locs val]
-  (reduce (fn [m loc]
-            (assoc m loc val))
-          mem
-          locs))
-
-(defn- update-memory-v2 [{:keys [mask memory] :as state} line]
+(defn- update-memory-v2 [state line]
   (if (= "mem" (subs line 0 3))
     (let [[mem-loc number] (parse-instruction line)]
-      (assoc state :memory (mem-push memory
-                                     (memory-addresses (apply-mask-v2 mask (binary-array mem-loc 36)))
-                                     number)))
+      (update state :memory merge (zipmap (memory-addresses (apply-mask-v2 (:mask state) (binary-array mem-loc 36)))
+                                          (repeat number))))
     (assoc state :mask (parse-mask line))))
 
-(->> "resources/day14input"
-     slurp
-     str/split-lines
-     (reduce update-memory-v2 {})
-     :memory
-     vals
-     (apply +))
+(time (->> "resources/day14input"
+           slurp
+           str/split-lines
+           (reduce update-memory-v2 {})
+           :memory
+           vals
+           (apply +)))
+;; => 4335927555692
+
+(comment
+  (with-progress-reporting
+    (quick-bench (->> "resources/day14input"
+                      slurp
+                      str/split-lines
+                      (reduce update-memory-v2 {})
+                      :memory
+                      vals
+                      (apply +))
+                 :verbose)))
