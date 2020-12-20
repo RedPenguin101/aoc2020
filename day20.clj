@@ -1,5 +1,6 @@
 (ns day20
-  (:require [clojure.string :as str]))
+  (:require [clojure.string :as str]
+            [clojure.set :as set]))
 
 (defn- parse-tile [tile-block]
   (let [[id-row & tile] (str/split-lines tile-block)
@@ -57,31 +58,45 @@
          (some (partial apply =) (map vector conns1 conns2))
          true)))
 
-(defn- find-fit [a [id2 conns2]]
+(defn- find-fit* [a [id2 conns2]]
   (first (filter #(fit? a %) (map (partial apply vector id2) (xforms conns2)))))
 
-(comment 
-  (find-fit [2729 [1427 1951 nil 2971] :r3] [1951 [2729 2311 nil nil]]))
-
-(defn- follow [direction this ys]
-  (cons this
-        (lazy-seq
-         (follow direction
-                 (let [next-id (direction (second this))]
-                   (find-fit this [next-id (ys next-id)]))
-                 ys))))
-
-(comment 
-  ((border-matches ex-tiles) 1951)
-
-  (take-while seq (follow second [2971 [1489 2729 nil nil] :r3] (into (sorted-map) (border-matches ex-tiles)))))
-
-(defn get-picture [start tiles]
-  (let [ys (into (sorted-map) (border-matches tiles))]
-    (reverse (for [row-header (take-while seq (follow first start ys))]
-               (take-while seq (follow second row-header ys))))))
+(defn- find-fit2
+  "where a is the left, and b is below"
+  [a b [id2 conns2]]
+  (cond (nil? a) (find-fit* b [id2 conns2])
+        (nil? b) (find-fit* a [id2 conns2])
+        :else
+        (first (set/intersection (set (filter #(fit? b %) (map (partial apply vector id2) (xforms conns2))))
+                                 (set (filter #(fit? a %) (map (partial apply vector id2) (xforms conns2))))))))
 
 (def input-border-matches (border-matches input))
+(def ex-tiles-matches (border-matches ex-tiles))
 
-(map #(map first %) (get-picture [1321 '(3761 2293 nil nil)] input))
-(get-picture [1321 '(3761 2293 nil nil)] input)
+(defn pos-manhatten-distance [n]
+  (for [x (range (inc n))
+        y (range (inc n))
+        :when (= (+ x y) n)]
+    [x y]))
+
+(defn f [tiles state man-dist] 
+  (into {}
+        (remove #(nil? (second %))
+                (reduce (fn [A [x y]]
+                          (let [down (A [x (dec y)])
+                                left (A [(dec x) y])
+                                this-id  (or (second (second left)) (first (second down)))]
+                            (assoc A [x y] (find-fit2 down left [this-id (tiles this-id)]))))
+                        state
+                        (rest (mapcat pos-manhatten-distance (range man-dist)))))))
+
+(comment
+  (find-fit2 [2729 [1427 1951 nil 2971] :r3] nil [1951 [2729 2311 nil nil]])
+  (find-fit2 (find-fit* [2971 [2729 1489 nil nil] :fv] [2729 ((border-matches ex-tiles) 2729)])
+             (find-fit* [2971 [2729 1489 nil nil] :fv] [1489 ((border-matches ex-tiles) 1489)])
+             [1427 ((border-matches ex-tiles) 1427)])
+
+  (f ex-tiles-matches {[0 0] [2971 [2729 1489 nil nil] :fv]} 5)
+  (f input-border-matches {[0 0] [1321 [3761 2293 nil nil] :none]} 24)
+  (count (f input-border-matches {[0 0] [1321 [3761 2293 nil nil] :none]} 24))
+  ((f input-border-matches {[0 0] [1321 [3761 2293 nil nil] :none]} 24) [12 12]))
