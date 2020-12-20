@@ -6,6 +6,8 @@
   (let [[id-row & tile] (str/split-lines tile-block)
         tile (mapv vec tile)]
     {:id (Integer/parseInt (subs id-row 5 9))
+     :borders (let [flipped (apply map vector tile)]
+                (vector (first tile) (last flipped) (last tile) (first flipped)))
      :tile tile
      :top (first tile)
      :bottom (last tile)
@@ -55,4 +57,32 @@
 (apply * (map :id (filter #(corner? % ex-tiles) ex-tiles)))
 ;; => 20899048083289
 (time (apply * (map :id (filter #(corner? % input) input))))
+;; => 17250897231301
+
+(defn find-match [border tiles]
+  (remove nil? (for [tile tiles]
+                 (when ((set (concat (map reverse (:borders tile)) (:borders tile))) border)
+                   (:id tile)))))
+
+(find-match (first (:borders tile-1951)) ex-tiles)
+
+(defn edge-matches2 [tiles]
+  (reduce
+   (fn [A tile]
+     (assoc A (:id tile)
+            (for [border (:borders tile)]
+              (first (remove #(= % (:id tile)) (find-match border tiles))))))
+   {}
+   tiles))
+
+(edge-matches2 ex-tiles)
+
+(defn corners [tiles]
+  (->> (edge-matches2 tiles)
+       (filter #(= 2 (count (remove nil? (second %)))))
+       keys))
+
+
+(apply * (corners ex-tiles))
+(time (apply * (corners input)))
 ;; => 17250897231301
