@@ -6,23 +6,19 @@
   (let [[id-row & tile] (str/split-lines tile-block)
         tile (mapv vec tile)]
     {:id (Integer/parseInt (subs id-row 5 9))
-     :borders (let [flipped (apply map vector tile)]
-                (vector (first tile) (last flipped) (last tile) (first flipped)))
+     :borders (let [flipped (apply map vector tile)] (vector (first tile) (last flipped) (last tile) (first flipped)))
      :tile tile}))
 
-
-(defn- find-match [border tiles]
-  (remove nil? (for [tile tiles]
-                 (when ((set (concat (map reverse (:borders tile)) (:borders tile))) border)
-                   (:id tile)))))
+(defn- find-match [tiles id border]
+  (some (fn [tile]
+          (let [connections (set (concat (map reverse (:borders tile)) (:borders tile)))]
+            (when (and (not= id (:id tile)) (connections border)) (:id tile)))) 
+       tiles))
 
 (defn- border-matches [tiles]
   (reduce
-   (fn [A tile]
-     (assoc A (:id tile)
-
-            (for [border (:borders tile)]
-              (first (remove #(= % (:id tile)) (find-match border tiles))))))
+   (fn [A {:keys [id borders]}]
+     (assoc A id (map (partial find-match tiles id) borders)))
    {}
    tiles))
 
