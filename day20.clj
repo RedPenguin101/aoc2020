@@ -97,6 +97,38 @@
              [1427 ((border-matches ex-tiles) 1427)])
 
   (f ex-tiles-matches {[0 0] [2971 [2729 1489 nil nil] :fv]} 5)
+  ;; => {[2 2] [3079 [nil nil 2473 2311] :none],
+  ;;     [0 0] [2971 [2729 1489 nil nil] :fv],
+  ;;     [1 0] [1489 [1427 1171 nil 2971] :fv],
+  ;;     [1 1] [1427 [2311 2473 1489 2729] :fv],
+  ;;     [0 2] [1951 [nil 2311 2729 nil] :fv],
+  ;;     [2 0] [1171 [2473 nil nil 1489] :fh],
+  ;;     [2 1] [2473 [3079 nil 1171 1427] :fd1],
+  ;;     [1 2] [2311 [nil 3079 1427 1951] :fv],
+  ;;     [0 1] [2729 [1951 1427 2971 nil] :fv]}
+
   (f input-border-matches {[0 0] [1321 [3761 2293 nil nil] :none]} 24)
   (count (f input-border-matches {[0 0] [1321 [3761 2293 nil nil] :none]} 24))
   ((f input-border-matches {[0 0] [1321 [3761 2293 nil nil] :none]} 24) [12 12]))
+
+(defn check-grid [grid]
+  (for [[[x y] [id [up right down left]]] grid]
+    (and (= up (first (grid [x (inc y)])))
+         (= right (first (grid [(inc x) y])))
+         (= down (first (grid [x (dec y)])))
+         (= left (first (grid [(dec x) y]))))))
+
+(check-grid (f ex-tiles-matches {[0 0] [2971 [2729 1489 nil nil] :fv]} 5))
+(every? true? (check-grid (f input-border-matches {[0 0] [1321 [3761 2293 nil nil] :none]} 24)))
+
+
+(def tile [[:a :b :c]
+           [:d :e :f]
+           [:g :h :i]])
+
+(defn trim-tile [tile]
+  (mapv #(rest %) (mapv #(drop 1 %) (vec (rest (drop 1 tile))))))
+
+(trim-tile tile)
+(:tile (first input))
+(trim-tile (:tile (first input)))
