@@ -9,6 +9,29 @@
      :borders (let [flipped (apply map vector tile)] (vector (first tile) (last flipped) (last tile) (first flipped)))
      :tile tile}))
 
+(def ex-tiles (map parse-tile (str/split (slurp "resources/day20example") #"\n\n")))
+(def input (map parse-tile (str/split (slurp "resources/day20input") #"\n\n")))
+
+(comment
+  "A tile looks like this:"
+  {:id 2311
+   :borders
+   [[\. \. \# \# \. \# \. \. \# \.]
+    [\. \. \. \# \. \# \# \. \. \#]
+    [\. \. \# \# \# \. \. \# \# \#]
+    [\. \# \# \# \# \# \. \. \# \.]]
+   :tile
+   [[\. \. \# \# \. \# \. \. \# \.]
+    [\# \# \. \. \# \. \. \. \. \.]
+    [\# \. \. \. \# \# \. \. \# \.]
+    [\# \# \# \# \. \# \. \. \. \#]
+    [\# \# \. \# \# \. \# \# \# \.]
+    [\# \# \. \. \. \# \. \# \# \#]
+    [\. \# \. \# \. \# \. \. \# \#]
+    [\. \. \# \. \. \. \. \# \. \.]
+    [\# \# \# \. \. \. \# \. \# \.]
+    [\. \. \# \# \# \. \. \# \# \#]]})
+
 (defn- find-match [tiles id border]
   (some (fn [tile]
           (let [connections (set (concat (map reverse (:borders tile)) (:borders tile)))]
@@ -22,13 +45,26 @@
    {}
    tiles))
 
+(comment
+  "the border matches of a tile are all the tiles it is connected to
+   2 matches denotes a corner, 3 an edge
+   These are given as a map of id->[matches]"
+
+  (border-matches ex-tiles)
+  {2729 '(2971 1427 1951 nil)
+   1171 '(2473 1489 nil nil)
+   2971 '(nil 1489 2729 nil)
+   2311 '(1427 3079 nil 1951)
+   1489 '(nil 1171 1427 2971)
+   1427 '(1489 2473 2311 2729)
+   3079 '(nil nil 2473 2311)
+   2473 '(nil 3079 1427 1171)
+   1951 '(2729 2311 nil nil)})
+
 (defn- corners [tiles]
   (->> (border-matches tiles)
        (filter #(= 2 (count (remove nil? (second %)))))
        keys))
-
-(def ex-tiles (map parse-tile (str/split (slurp "resources/day20example") #"\n\n")))
-(def input (map parse-tile (str/split (slurp "resources/day20input") #"\n\n")))
 
 (apply * (corners ex-tiles))
 (time (apply * (corners input)))
@@ -91,35 +127,29 @@
                         (rest (mapcat pos-manhatten-distance (range man-dist)))))))
 
 (comment
-  (find-fit [2729 [1427 1951 nil 2971] :r3] nil [1951 [2729 2311 nil nil]])
-  (find-fit (find-fit* [2971 [2729 1489 nil nil] :fv] [2729 ((border-matches ex-tiles) 2729)])
-            (find-fit* [2971 [2729 1489 nil nil] :fv] [1489 ((border-matches ex-tiles) 1489)])
-            [1427 ((border-matches ex-tiles) 1427)])
+  "build grid takes tiles, your 'starter' and the max distance to test, and returns
+   a mapping of coordinates on a 2d plane to a tuple of the id of the tile, the connections to
+   other tiles (top, right, left, bottom) and the xforms the tile is required to go through."
 
-  (f ex-tiles-matches {[0 0] [2971 [2729 1489 nil nil] :fv]} 5)
-  ;; => {[2 2] [3079 [nil nil 2473 2311] :none],
-  ;;     [0 0] [2971 [2729 1489 nil nil] :fv],
-  ;;     [1 0] [1489 [1427 1171 nil 2971] :fv],
-  ;;     [1 1] [1427 [2311 2473 1489 2729] :fv],
-  ;;     [0 2] [1951 [nil 2311 2729 nil] :fv],
-  ;;     [2 0] [1171 [2473 nil nil 1489] :fh],
-  ;;     [2 1] [2473 [3079 nil 1171 1427] :fd1],
-  ;;     [1 2] [2311 [nil 3079 1427 1951] :fv],
-  ;;     [0 1] [2729 [1951 1427 2971 nil] :fv]}
+  (build-grid ex-tiles-matches {[0 0] [2971 [2729 1489 nil nil] :fv]} 5)
+  {[2 2] [3079 [nil nil 2473 2311] :r0]
+   [0 0] [2971 [2729 1489 nil nil] :fv]
+   [1 0] [1489 [1427 1171 nil 2971] :fv]
+   [1 1] [1427 [2311 2473 1489 2729] :fv]
+   [0 2] [1951 [nil 2311 2729 nil] :fv]
+   [2 0] [1171 [2473 nil nil 1489] :fh]
+   [2 1] [2473 [3079 nil 1171 1427] :fd1]
+   [1 2] [2311 [nil 3079 1427 1951] :fv]
+   [0 1] [2729 [1951 1427 2971 nil] :fv]})
 
-  (f input-border-matches {[0 0] [1321 [3761 2293 nil nil] :none]} 24)
-  (count (f input-border-matches {[0 0] [1321 [3761 2293 nil nil] :none]} 24))
-  ((f input-border-matches {[0 0] [1321 [3761 2293 nil nil] :none]} 24) [12 12]))
+(comment
+  "this is a helper function to check the grid connects up properly"
+  (defn check-grid [grid]
+    (for [[[x y] [id [up right down left]]] grid]
+      (and (= up (first (grid [x (inc y)])))
+           (= right (first (grid [(inc x) y])))
+           (= down (first (grid [x (dec y)])))
+           (= left (first (grid [(dec x) y]))))))
 
-(defn check-grid [grid]
-  (for [[[x y] [id [up right down left]]] grid]
-    (and (= up (first (grid [x (inc y)])))
-         (= right (first (grid [(inc x) y])))
-         (= down (first (grid [x (dec y)])))
-         (= left (first (grid [(dec x) y]))))))
-
-(check-grid (build-grid ex-tiles-matches {[0 0] [2971 [2729 1489 nil nil] :fv]} 5))
-(every? true? (check-grid (build-grid input-border-matches {[0 0] [1321 [3761 2293 nil nil] :none]} 24)))
-
-(build-grid ex-tiles-matches {[0 0] [2971 [2729 1489 nil nil] :fv]} 5)
-
+  (check-grid (build-grid ex-tiles-matches {[0 0] [2971 [2729 1489 nil nil] :fv]} 5))
+  (every? true? (check-grid (build-grid input-border-matches {[0 0] [1321 [3761 2293 nil nil] :none]} 24))))
