@@ -1,16 +1,28 @@
 (ns day20-2
-  (:require [clojure.test :refer [deftest is]]))
+  (:require [clojure.string :as str]
+            [clojure.test :refer [deftest is]]))
 
 (defn flip [tile dir]
   (case dir
     :fv (reverse tile)
-    :fh (map reverse tile)
-    :fd1 (apply map vector tile)
+    :fh (mapv reverse tile)
+    :fd1 (apply mapv vector tile)
     :fd2 (flip (flip tile :r1) :fv)
     :r0 tile
-    :r1 (apply map vector (reverse tile))
+    :r1 (apply mapv vector (reverse tile))
     :r2 (flip (flip tile :r1) :r1)
     :r3 (flip (flip tile :fh) :fd1)))
+
+(defn- parse-tile [tile-block]
+  (let [[id-row & tile] (str/split-lines tile-block)
+        tile (mapv vec tile)]
+    {:id (Integer/parseInt (subs id-row 5 9))
+     :borders (let [flipped (apply map vector tile)] (vector (first tile) (last flipped) (last tile) (first flipped)))
+     :tile tile}))
+
+(def ex-tiles (map parse-tile (str/split (slurp "resources/day20example") #"\n\n")))
+
+(first ex-tiles)
 
 
 (deftest tile-flipping

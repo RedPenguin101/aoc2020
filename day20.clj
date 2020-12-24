@@ -35,7 +35,7 @@
 ;; => 17250897231301
 
 (defn- xforms [[a b c d]]
-  (vector [[a b c d] :none]
+  (vector [[a b c d] :r0]
           [[d a b c] :r1]
           [[c d a b] :r2]
           [[b c d a] :r3]
@@ -61,7 +61,7 @@
 (defn- find-fit* [a [id2 conns2]]
   (first (filter #(fit? a %) (map (partial apply vector id2) (xforms conns2)))))
 
-(defn- find-fit2
+(defn- find-fit
   "where a is the left, and b is below"
   [a b [id2 conns2]]
   (cond (nil? a) (find-fit* b [id2 conns2])
@@ -79,22 +79,22 @@
         :when (= (+ x y) n)]
     [x y]))
 
-(defn f [tiles state man-dist] 
+(defn build-grid [tiles state man-dist]
   (into {}
         (remove #(nil? (second %))
                 (reduce (fn [A [x y]]
                           (let [down (A [x (dec y)])
                                 left (A [(dec x) y])
                                 this-id  (or (second (second left)) (first (second down)))]
-                            (assoc A [x y] (find-fit2 down left [this-id (tiles this-id)]))))
+                            (assoc A [x y] (find-fit down left [this-id (tiles this-id)]))))
                         state
                         (rest (mapcat pos-manhatten-distance (range man-dist)))))))
 
 (comment
-  (find-fit2 [2729 [1427 1951 nil 2971] :r3] nil [1951 [2729 2311 nil nil]])
-  (find-fit2 (find-fit* [2971 [2729 1489 nil nil] :fv] [2729 ((border-matches ex-tiles) 2729)])
-             (find-fit* [2971 [2729 1489 nil nil] :fv] [1489 ((border-matches ex-tiles) 1489)])
-             [1427 ((border-matches ex-tiles) 1427)])
+  (find-fit [2729 [1427 1951 nil 2971] :r3] nil [1951 [2729 2311 nil nil]])
+  (find-fit (find-fit* [2971 [2729 1489 nil nil] :fv] [2729 ((border-matches ex-tiles) 2729)])
+            (find-fit* [2971 [2729 1489 nil nil] :fv] [1489 ((border-matches ex-tiles) 1489)])
+            [1427 ((border-matches ex-tiles) 1427)])
 
   (f ex-tiles-matches {[0 0] [2971 [2729 1489 nil nil] :fv]} 5)
   ;; => {[2 2] [3079 [nil nil 2473 2311] :none],
@@ -118,17 +118,8 @@
          (= down (first (grid [x (dec y)])))
          (= left (first (grid [(dec x) y]))))))
 
-(check-grid (f ex-tiles-matches {[0 0] [2971 [2729 1489 nil nil] :fv]} 5))
-(every? true? (check-grid (f input-border-matches {[0 0] [1321 [3761 2293 nil nil] :none]} 24)))
+(check-grid (build-grid ex-tiles-matches {[0 0] [2971 [2729 1489 nil nil] :fv]} 5))
+(every? true? (check-grid (build-grid input-border-matches {[0 0] [1321 [3761 2293 nil nil] :none]} 24)))
 
+(build-grid ex-tiles-matches {[0 0] [2971 [2729 1489 nil nil] :fv]} 5)
 
-(def tile [[:a :b :c]
-           [:d :e :f]
-           [:g :h :i]])
-
-(defn trim-tile [tile]
-  (mapv #(rest %) (mapv #(drop 1 %) (vec (rest (drop 1 tile))))))
-
-(trim-tile tile)
-(:tile (first input))
-(trim-tile (:tile (first input)))
