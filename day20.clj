@@ -153,3 +153,33 @@
 
   (check-grid (build-grid ex-tiles-matches {[0 0] [2971 [2729 1489 nil nil] :fv]} 5))
   (every? true? (check-grid (build-grid input-border-matches {[0 0] [1321 [3761 2293 nil nil] :none]} 24))))
+
+(defn flip [tile dir]
+  (case dir
+    :fv (reverse tile)
+    :fh (mapv reverse tile)
+    :fd1 (apply mapv vector tile)
+    :fd2 (flip (flip tile :r1) :fv)
+    :r0 tile
+    :r1 (apply mapv vector (reverse tile))
+    :r2 (flip (flip tile :r1) :r1)
+    :r3 (flip (flip tile :fh) :fd1)))
+
+(defn trim-tile [tile]
+  (map (comp rest butlast) (rest (butlast tile))))
+
+(comment
+  (trim-tile [[:a :b :c :x]
+              [:d :e :f :y]
+              [:g :h :i :z]
+              [:v :w :q :r]]))
+
+(defn build-grid2 [grid-defn tiles size]
+  (partition size (for [y (reverse (range size))
+                        x (range size)]
+                    (let [[id _ xf] (get grid-defn [x y])]
+                      (str/join "\n" (map str/join (flip (trim-tile (:tile (first (filter #(= id (:id %)) tiles)))) xf)))))))
+
+(println (build-grid2 (build-grid ex-tiles-matches {[0 0] [2971 [2729 1489 nil nil] :fv]} 5) ex-tiles 3))
+(build-grid ex-tiles-matches {[0 0] [2971 [2729 1489 nil nil] :fv]} 5)
+(group-by :id ex-tiles)
