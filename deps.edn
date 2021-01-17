@@ -8,10 +8,4 @@
                      com.clojure-goes-fast/clj-async-profiler {:mvn/version "0.4.1"}}
         :jvm-opts ["-Djdk.attach.allowAttachSelf"
                    "-XX:+UnlockDiagnosticVMOptions"
-                   "-XX:+DebugNonSafepoints"]}
-  :calva
-  {:extra-deps {vlaaad/reveal {:mvn/version "1.2.185"}}
-   :jvm-opts   ["-Dvlaaad.reveal.prefs={:font-size,48}"]
-   :main-opts ["-m" "nrepl.cmdline"
-               "--middleware"
-               "[vlaaad.reveal.nrepl/middleware,cider.nrepl/cider-middleware]"]}}}
+                   "-XX:+DebugNonSafepoints"]}}}
