@@ -3,3 +3,4 @@
 .cpcache/
 .clj-kondo/
 .lsp
+.portal
